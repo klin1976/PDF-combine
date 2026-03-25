@@ -27,6 +27,13 @@
 pip install Pillow
 ```
 
+## 📦 Windows 執行檔 (.exe)
+
+對於不方便安裝 Python 環境的 Windows 使用者，可以使用已封裝好的 `PDF-Combine.exe`：
+
+1. **取得檔案**：從 `dist/` 目錄中找到 `PDF-Combine.exe`。
+2. **直接執行**：雙擊即可啟動，功能與腳本完全一致。
+
 ## 📖 使用方法
 
 1. **執行腳本**：
