@@ -1,0 +1,12 @@
+.venv/
+build/
+dist/
+__pycache__/
+*.pdf
+*.spec
+.gemini/
+.agent/
+.agents/
+_agent/
+_agents/
+.DS_Store
