@@ -10,7 +10,7 @@
 - **解析度設定**：PDF 轉 PNG 可設定 DPI，預設為 200。
 - **雙模式選取**：
   - **GUI 模式**：啟動後選擇「圖片合併成 PDF」或「PDF 轉成 PNG 圖檔」。
-  - **CLI 模式**：提供 `images-to-pdf` 與 `pdf-to-png` 子命令，適合批次處理。
+  - **CLI 模式**：提供 `images-to-pdf` 與 `pdf-to-png` 子命令，錯誤輸出到 stderr，適合批次與 headless 環境。
 - **自動排序**：圖片合併 PDF 時依檔案名稱排序。
 - **路徑防錯**：自動建立不存在的輸出資料夾。
 - **編碼優化**：針對 Windows 環境優化 UTF-8 輸出，避免中文字元亂碼。
@@ -85,13 +85,15 @@ sample_page_001.png
 sample_page_002.png
 ```
 
+CLI 模式成功訊息會輸出到 stdout；錯誤與警告會輸出到 stderr，並以非零狀態結束，不會彈出 tkinter messagebox。
+
 ## 專案結構
 
 - `PDF-Combine.py`：主程式腳本。
 - `requirements.txt`：Python 相依套件。
 - `README.md`：專案說明文件。
 - `.gitignore`：排除不需要上傳至版本控制的檔案。
-- `REMINDER.txt` & `ConversationRecord.txt`：開發維護紀錄。
+- `REMINDER.txt`、`ConversationRecord.txt`、`ConversationRecord.md`：歷史開發紀錄；目前進度請以 Obsidian 專案駕駛艙為準。
 
 ## 授權
 

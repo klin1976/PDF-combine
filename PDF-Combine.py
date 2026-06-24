@@ -10,6 +10,11 @@ try:
 except ImportError:
     fitz = None
 
+
+class ConversionError(Exception):
+    """Raised for expected conversion failures shown to users."""
+
+
 # 在 Windows 上將 stdout 重新設定為 utf-8（避免編碼問題）
 # PyInstaller --noconsole 模式下 sys.stdout 可能為 None，需先檢查
 if os.name == 'nt' and sys.stdout is not None:
@@ -19,6 +24,21 @@ if os.name == 'nt' and sys.stdout is not None:
         import io
         if sys.stdout.buffer is not None:
             sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+
+def write_line(message, stream=None):
+    stream = stream or sys.stdout
+    if stream:
+        print(message, file=stream)
+
+
+def write_warning(message):
+    write_line(f"警告：{message}", sys.stderr or sys.stdout)
+
+
+def write_error(message):
+    write_line(f"錯誤：{message}", sys.stderr or sys.stdout)
+
 
 def choose_mode_with_tk():
     root = tk.Tk()
@@ -143,16 +163,14 @@ def parse_page_selection(selection, page_count):
 def images_to_pdf(image_folder, output_pdf, notify=True):
     # 驗證來源資料夾
     if not os.path.isdir(image_folder):
-        messagebox.showerror("錯誤", f"來源資料夾不存在：{image_folder}")
-        sys.exit(1)
+        raise ConversionError(f"來源資料夾不存在：{image_folder}")
 
     # 支援的副檔名
     exts = ('.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff')
     image_files = sorted([f for f in os.listdir(image_folder) if f.lower().endswith(exts)])
 
     if not image_files:
-        messagebox.showwarning("警告", "沒有找到任何可用的圖片檔案，請確認路徑和檔案格式。")
-        sys.exit(1)
+        raise ConversionError("沒有找到任何可用的圖片檔案，請確認路徑和檔案格式。")
 
     images = []
     for img_name in image_files:
@@ -161,13 +179,11 @@ def images_to_pdf(image_folder, output_pdf, notify=True):
             img = Image.open(img_path).convert('RGB')
             images.append(img)
         except Exception as e:
-            # 視窗模式下 print 看不到，但至少不中斷
-            if sys.stdout:
-                print(f"跳過無法開啟的檔案：{img_path} ({e})")
+            if not notify:
+                write_warning(f"跳過無法開啟的檔案：{img_path} ({e})")
 
     if not images:
-        messagebox.showerror("錯誤", "所有圖片均無法開啟，無法建立 PDF。")
-        sys.exit(1)
+        raise ConversionError("所有圖片均無法開啟，無法建立 PDF。")
 
     try:
         images[0].save(output_pdf, save_all=True, append_images=images[1:])
@@ -175,8 +191,7 @@ def images_to_pdf(image_folder, output_pdf, notify=True):
             messagebox.showinfo("成功", f"PDF 已成功建立！\n位置：{output_pdf}")
         return output_pdf
     except Exception as e:
-        messagebox.showerror("錯誤", f"儲存 PDF 時發生錯誤：{e}")
-        sys.exit(1)
+        raise ConversionError(f"儲存 PDF 時發生錯誤：{e}")
     finally:
         # 關閉所有已開啟的影像檔案物件
         for img in images:
@@ -187,26 +202,19 @@ def images_to_pdf(image_folder, output_pdf, notify=True):
 
 def pdf_to_png(input_pdf, output_folder, dpi=200, pages="", notify=True):
     if fitz is None:
-        messagebox.showerror(
-            "缺少套件",
-            "PDF 轉 PNG 需要安裝 PyMuPDF。\n請執行：pip install PyMuPDF"
-        )
-        sys.exit(1)
+        raise ConversionError("PDF 轉 PNG 需要安裝 PyMuPDF。請執行：pip install PyMuPDF")
 
     if dpi < 72 or dpi > 600:
-        messagebox.showerror("錯誤", "DPI 必須介於 72 到 600 之間。")
-        sys.exit(1)
+        raise ConversionError("DPI 必須介於 72 到 600 之間。")
 
     if not os.path.isfile(input_pdf):
-        messagebox.showerror("錯誤", f"PDF 檔案不存在：{input_pdf}")
-        sys.exit(1)
+        raise ConversionError(f"PDF 檔案不存在：{input_pdf}")
 
     if not os.path.isdir(output_folder):
         try:
             os.makedirs(output_folder, exist_ok=True)
         except Exception as e:
-            messagebox.showerror("錯誤", f"無法建立輸出資料夾：{output_folder}\n{e}")
-            sys.exit(1)
+            raise ConversionError(f"無法建立輸出資料夾：{output_folder}\n{e}")
 
     base_name = os.path.splitext(os.path.basename(input_pdf))[0]
     output_files = []
@@ -215,8 +223,7 @@ def pdf_to_png(input_pdf, output_folder, dpi=200, pages="", notify=True):
     try:
         document = fitz.open(input_pdf)
         if document.page_count == 0:
-            messagebox.showwarning("警告", "PDF 沒有可轉換的頁面。")
-            sys.exit(1)
+            raise ConversionError("PDF 沒有可轉換的頁面。")
 
         page_indexes = parse_page_selection(pages, document.page_count)
         zoom = dpi / 72
@@ -232,9 +239,12 @@ def pdf_to_png(input_pdf, output_folder, dpi=200, pages="", notify=True):
             )
             pixmap.save(output_path)
             output_files.append(output_path)
+    except ConversionError:
+        raise
+    except ValueError as e:
+        raise ConversionError(str(e))
     except Exception as e:
-        messagebox.showerror("錯誤", f"轉換 PDF 時發生錯誤：{e}")
-        sys.exit(1)
+        raise ConversionError(f"轉換 PDF 時發生錯誤：{e}")
     finally:
         if document is not None:
             document.close()
@@ -265,15 +275,19 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command == "images-to-pdf":
-        output_pdf = images_to_pdf(args.input_folder, args.output, notify=False)
-        print(f"PDF 已成功建立：{output_pdf}")
-        return
+    try:
+        if args.command == "images-to-pdf":
+            output_pdf = images_to_pdf(args.input_folder, args.output, notify=False)
+            write_line(f"PDF 已成功建立：{output_pdf}")
+            return 0
 
-    if args.command == "pdf-to-png":
-        output_files = pdf_to_png(args.input, args.output_folder, args.dpi, args.pages, notify=False)
-        print(f"已成功輸出 {len(output_files)} 張 PNG 圖檔：{args.output_folder}")
-        return
+        if args.command == "pdf-to-png":
+            output_files = pdf_to_png(args.input, args.output_folder, args.dpi, args.pages, notify=False)
+            write_line(f"已成功輸出 {len(output_files)} 張 PNG 圖檔：{args.output_folder}")
+            return 0
+    except ConversionError as e:
+        write_error(str(e))
+        return 1
 
     try:
         mode = choose_mode_with_tk()
@@ -283,11 +297,17 @@ def main():
         else:
             input_pdf, output_folder, dpi, pages = choose_pdf_to_png_paths_with_tk()
             pdf_to_png(input_pdf, output_folder, dpi, pages)
+    except ConversionError as e:
+        tk.Tk().withdraw()
+        messagebox.showerror("錯誤", str(e))
+        return 1
     except Exception as e:
         # 這裡用 messagebox 確保錯誤能被看見
         tk.Tk().withdraw()
         messagebox.showerror("錯誤", f"程式啟動失敗：{e}")
-        sys.exit(1)
+        return 1
+
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

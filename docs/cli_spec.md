@@ -111,9 +111,11 @@ sample_page_002.png
 
 ## 錯誤行為
 
-- 來源資料夾不存在、來源 PDF 不存在、無可用圖片、DPI 超出範圍、頁碼格式錯誤或頁碼超出範圍時，程式會顯示錯誤並以非零狀態結束。
-- `pdf-to-png` 需要 PyMuPDF；缺少套件時會提示安裝 PyMuPDF。
-- CLI 模式下仍可能透過 tkinter messagebox 顯示錯誤；未來若要支援純 headless CLI，可再建立相容性變更計畫。
+- CLI 模式不使用 tkinter messagebox；適合 headless 或批次環境。
+- 成功訊息輸出到 stdout；錯誤與警告輸出到 stderr。
+- 來源資料夾不存在、來源 PDF 不存在、無可用圖片、DPI 超出範圍、頁碼格式錯誤或頁碼超出範圍時，程式會輸出錯誤並以非零狀態結束。
+- `pdf-to-png` 需要 PyMuPDF；缺少套件時會提示安裝 PyMuPDF 並以非零狀態結束。
+- 未提供子命令時才會啟動 tkinter GUI，GUI 模式仍使用 messagebox 顯示錯誤、提示與成功訊息。
 
 ## 相容性規則
 
