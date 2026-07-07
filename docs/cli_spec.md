@@ -17,12 +17,26 @@ PDF-combine 目前提供兩個 CLI 子命令：
 python PDF-Combine.py <command> [options]
 ```
 
+Windows 發布版的 console exe 是等價 CLI 入口：
+
+```bash
+PDF-Combine-CLI.exe <command> [options]
+```
+
+`PDF-Combine-GUI.exe` 是圖形化入口；未提供子命令時會開啟 tkinter GUI，不作為批次腳本入口。
+
 ## images-to-pdf
 
 ### 語法
 
 ```bash
 python PDF-Combine.py images-to-pdf --input-folder <folder> --output <pdf-file>
+```
+
+Windows console exe：
+
+```bash
+PDF-Combine-CLI.exe images-to-pdf --input-folder <folder> --output <pdf-file>
 ```
 
 ### 參數
@@ -61,6 +75,12 @@ PDF 已成功建立：<output_pdf>
 
 ```bash
 python PDF-Combine.py pdf-to-png --input <pdf-file> --output-folder <folder> [--dpi <dpi>] [--pages <selection>]
+```
+
+Windows console exe：
+
+```bash
+PDF-Combine-CLI.exe pdf-to-png --input <pdf-file> --output-folder <folder> [--dpi <dpi>] [--pages <selection>]
 ```
 
 ### 參數
@@ -112,6 +132,8 @@ sample_page_002.png
 ## 錯誤行為
 
 - CLI 模式不使用 tkinter messagebox；適合 headless 或批次環境。
+- `PDF-Combine-CLI.exe` 必須維持與 `python PDF-Combine.py <command>` 相同的 stdout、stderr 與 exit code 行為。
+- `PDF-Combine-GUI.exe` 用於 GUI 模式；使用者雙擊後不應顯示 console 視窗。
 - 成功訊息輸出到 stdout；錯誤與警告輸出到 stderr。
 - 來源資料夾不存在、來源 PDF 不存在、無可用圖片、DPI 超出範圍、頁碼格式錯誤或頁碼超出範圍時，程式會輸出錯誤並以非零狀態結束。
 - `pdf-to-png` 需要 PyMuPDF；缺少套件時會提示安裝 PyMuPDF 並以非零狀態結束。

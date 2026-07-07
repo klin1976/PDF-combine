@@ -39,10 +39,22 @@ pip install Pillow PyMuPDF
 
 ## Windows 執行檔 (.exe)
 
-對於不方便安裝 Python 環境的 Windows 使用者，可以使用已封裝好的 `PDF-Combine.exe`：
+對於不方便安裝 Python 環境的 Windows 使用者，可以使用 GitHub Release 提供的已封裝執行檔：
 
-1. **取得檔案**：從 `dist/` 目錄中找到 `PDF-Combine.exe`。
-2. **直接執行**：雙擊即可啟動，功能與腳本一致。
+- `PDF-Combine-GUI.exe`：給一般使用者雙擊啟動，會開啟圖形化介面，不顯示 console 視窗。
+- `PDF-Combine-CLI.exe`：給命令列、批次檔或排程使用，支援 `images-to-pdf` 與 `pdf-to-png` 子命令，輸出 stdout/stderr 與 exit code。
+
+開發者可用下列指令在 Windows 重新打包兩個 exe：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build_windows.ps1
+```
+
+打包需要先安裝 PyInstaller：
+
+```bash
+pip install pyinstaller
+```
 
 ## 使用方法
 
@@ -58,12 +70,20 @@ pip install Pillow PyMuPDF
 3. **依提示選取來源與輸出位置**。
 4. **完成**：程式會顯示輸出檔案或輸出資料夾。
 
+若使用 Windows 發布版，雙擊 `PDF-Combine-GUI.exe` 即可進入相同流程。
+
 ### CLI 模式
 
 圖片合併成 PDF：
 
 ```bash
 python PDF-Combine.py images-to-pdf --input-folder ./images --output ./combined_images.pdf
+```
+
+Windows console exe 也支援相同參數：
+
+```bash
+PDF-Combine-CLI.exe images-to-pdf --input-folder ./images --output ./combined_images.pdf
 ```
 
 PDF 全部頁面轉 PNG：
@@ -90,8 +110,11 @@ CLI 模式成功訊息會輸出到 stdout；錯誤與警告會輸出到 stderr�
 ## 專案結構
 
 - `PDF-Combine.py`：主程式腳本。
+- `scripts/build_windows.ps1`：Windows 雙 exe 打包腳本。
 - `requirements.txt`：Python 相依套件。
 - `README.md`：專案說明文件。
+- `docs/cli_spec.md`：穩定 CLI 合約。
+- `docs/release_notes_v0.2.0.md`：v0.2.0 GitHub Release notes 草稿。
 - `.gitignore`：排除不需要上傳至版本控制的檔案。
 - `REMINDER.txt`、`ConversationRecord.txt`、`ConversationRecord.md`：歷史開發紀錄；目前進度請以 Obsidian 專案駕駛艙為準。
 
