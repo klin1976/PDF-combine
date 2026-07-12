@@ -15,15 +15,27 @@ class ConversionError(Exception):
     """Raised for expected conversion failures shown to users."""
 
 
-# 在 Windows 上將 stdout 重新設定為 utf-8（避免編碼問題）
-# PyInstaller --noconsole 模式下 sys.stdout 可能為 None，需先檢查
-if os.name == 'nt' and sys.stdout is not None:
+def configure_windows_text_stream(stream):
+    if stream is None:
+        return None
+
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
+        stream.reconfigure(encoding='utf-8', errors='backslashreplace')
+        return stream
     except AttributeError:
         import io
-        if sys.stdout.buffer is not None:
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        buffer = getattr(stream, 'buffer', None)
+        if buffer is not None:
+            return io.TextIOWrapper(buffer, encoding='utf-8', errors='backslashreplace')
+
+    return stream
+
+
+# 在 Windows 上將 CLI 文字串流重新設定為 UTF-8（避免中文輸出亂碼）。
+# PyInstaller --noconsole 模式下 stdout/stderr 可能為 None，需先檢查。
+if os.name == 'nt':
+    sys.stdout = configure_windows_text_stream(sys.stdout)
+    sys.stderr = configure_windows_text_stream(sys.stderr)
 
 
 def write_line(message, stream=None):
